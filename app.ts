@@ -23,7 +23,20 @@ const redirect_uri = process.env.REDIRECT_URI || "";
 const scope = process.env.SCOPE || "";
 const frontend_uri = process.env.FRONTEND_URI || "";
 
+app.get("/", (req, res) => {
+	res.json({ data: "this test is working" });
+});
+
 app.get("/auth/login", (req, res) => {
+	console.log("INSIDE AUTH/LOGIN");
+	console.log(
+		"ALL THE ENV VARIABLES",
+		spotify_client_id,
+		spotify_client_secret,
+		redirect_uri,
+		scope,
+		frontend_uri
+	);
 	const state = Math.random().toString(36).substring(7);
 	req.session.state = state;
 
@@ -46,8 +59,7 @@ app.get("/auth/callback", (req, res) => {
 	const error = req.query.error;
 	if (error) {
 		res.redirect(
-			"http://localhost:3000/" +
-				queryString.stringify({ error: "access_denied" })
+			frontend_uri + queryString.stringify({ error: "access_denied" })
 		);
 	}
 	const code = req.query.code;
@@ -55,8 +67,7 @@ app.get("/auth/callback", (req, res) => {
 
 	if (state !== req.session.state) {
 		res.redirect(
-			"http://localhost:3000/" +
-				queryString.stringify({ error: "state_mismatch" })
+			frontend_uri + queryString.stringify({ error: "state_mismatch" })
 		);
 	} else {
 		const authOptions = {
@@ -80,7 +91,7 @@ app.get("/auth/callback", (req, res) => {
 			if (!error && response.statusCode === 200) {
 				req.session.access_token = body.access_token;
 				req.session.refresh_token = body.refresh_token;
-				res.redirect("http://localhost:3000");
+				res.redirect(frontend_uri);
 			}
 		});
 	}
